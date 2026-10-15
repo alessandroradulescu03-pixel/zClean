@@ -149,93 +149,177 @@ const onReady = fn => (siteReady ? fn() : readyQueue.push(fn));
     c.fillRect(0, 0, W, H);
   }
 
-  // Percorso del tergivetro: passate orizzontali avanti e indietro,
-  // una riga sotto l'altra, come quando si lava un vetro.
-  function path(p) {
-    const rows = Math.max(4, Math.min(7, Math.round(H / 165)));
-    const bh = H / rows;                       // altezza di ogni passata = lunghezza lama
-    const m = Math.min(140, bh * .9) + 30;     // esce dallo schermo prima di cambiare riga
-    const L = W + 2 * m;
-    const pos = Math.min(p, .99999) * rows * L;
-    const row = Math.floor(pos / L);
-    const s = pos - row * L;
-    const dir = row % 2 === 0 ? 1 : -1;        // riga pari → destra, dispari → sinistra
-    const x = dir > 0 ? -m + s : W + m - s;
-    return { rows, bh, m, row, dir, x };
+  // ---------------------------------------------------------
+  // Percorso del tergivetro: movimento "a mano", casuale e curvo.
+  // Passa su tutto lo schermo (righe o colonne a caso) con onde
+  // e cerchi, e la lama resta sempre di traverso al movimento.
+  // ---------------------------------------------------------
+  let L, track, pathLen, lastD = 0;
+
+  function buildPath() {
+    L = Math.max(110, Math.min(200, Math.min(W, H) * .24));   // lunghezza lama
+    const cell = L * 1.0;
+    const cols = Math.max(2, Math.ceil(W / cell));
+    const rows = Math.max(2, Math.ceil(H / cell));
+    const vertical = Math.random() < .45;
+    const jit = () => (Math.random() - .5) * cell * .55;
+    const pts = [];
+    if (!vertical) {
+      for (let r = 0; r < rows; r++) {
+        const cy = (r + .5) * H / rows;
+        for (let k = 0; k < cols; k++) {
+          const c = r % 2 ? cols - 1 - k : k;
+          pts.push({ x: (c + .5) * W / cols + jit(), y: cy + jit() });
+        }
+      }
+    } else {
+      for (let c = 0; c < cols; c++) {
+        const cx = (c + .5) * W / cols;
+        for (let k = 0; k < rows; k++) {
+          const r = c % 2 ? rows - 1 - k : k;
+          pts.push({ x: cx + jit(), y: (r + .5) * H / rows + jit() });
+        }
+      }
+    }
+    // entra e esce da fuori schermo
+    const f = pts[0], l = pts[pts.length - 1];
+    pts.unshift(vertical ? { x: f.x, y: -L * 1.6 } : { x: -L * 1.6, y: f.y });
+    pts.push({ x: l.x + (l.x > W / 2 ? L * 1.8 : -L * 1.8), y: l.y + (l.y > H / 2 ? L : -L) });
+
+    // curva morbida che passa per tutti i punti (Catmull-Rom)
+    let dense = [];
+    for (let i = 0; i < pts.length - 1; i++) {
+      const p0 = pts[Math.max(0, i - 1)], p1 = pts[i], p2 = pts[i + 1], p3 = pts[Math.min(pts.length - 1, i + 2)];
+      for (let t = 0; t < 1; t += 1 / 18) {
+        const t2 = t * t, t3 = t2 * t;
+        dense.push({
+          x: .5 * (2 * p1.x + (-p0.x + p2.x) * t + (2 * p0.x - 5 * p1.x + 4 * p2.x - p3.x) * t2 + (-p0.x + 3 * p1.x - 3 * p2.x + p3.x) * t3),
+          y: .5 * (2 * p1.y + (-p0.y + p2.y) * t + (2 * p0.y - 5 * p1.y + 4 * p2.y - p3.y) * t2 + (-p0.y + 3 * p1.y - 3 * p2.y + p3.y) * t3),
+        });
+      }
+    }
+    dense.push(pts[pts.length - 1]);
+
+    // onde e piccoli cerchi, come una mano che strofina
+    const ph1 = Math.random() * 6.28, ph2 = Math.random() * 6.28;
+    let d = 0;
+    const withWiggle = dense.map((q, i) => {
+      if (i) d += Math.hypot(q.x - dense[i - 1].x, q.y - dense[i - 1].y);
+      const a = dense[Math.min(i + 1, dense.length - 1)], b = dense[Math.max(i - 1, 0)];
+      const tx = a.x - b.x, ty = a.y - b.y, tl = Math.hypot(tx, ty) || 1;
+      const nx = -ty / tl, ny = tx / tl;
+      const w = Math.sin(d / L * 2.2 + ph1) * L * .26 + Math.sin(d / L * 5.3 + ph2) * L * .1;
+      const u = Math.cos(d / L * 5.3 + ph2) * L * .1; // componente lungo il percorso → piccoli cerchi
+      return { x: q.x + nx * w + (tx / tl) * u, y: q.y + ny * w + (ty / tl) * u };
+    });
+
+    // distanze e angolo della lama (perpendicolare al movimento, ammorbidito)
+    track = [];
+    let acc = 0, prevAng = 0;
+    withWiggle.forEach((q, i) => {
+      if (i) acc += Math.hypot(q.x - withWiggle[i - 1].x, q.y - withWiggle[i - 1].y);
+      const a = withWiggle[Math.min(i + 2, withWiggle.length - 1)], b = withWiggle[Math.max(i - 2, 0)];
+      let ang = Math.atan2(a.y - b.y, a.x - b.x);
+      while (ang - prevAng > Math.PI) ang -= 2 * Math.PI;
+      while (ang - prevAng < -Math.PI) ang += 2 * Math.PI;
+      prevAng = ang;
+      track.push({ x: q.x, y: q.y, ang, d: acc });
+    });
+    const win = 7;
+    track = track.map((q, i) => {
+      let s = 0, n = 0;
+      for (let k = Math.max(0, i - win); k <= Math.min(track.length - 1, i + win); k++) { s += track[k].ang; n++; }
+      return { ...q, ang: s / n };
+    });
+    pathLen = acc;
+    lastD = 0;
   }
 
+  // posizione e angolo della lama a una certa distanza sul percorso
+  let hint = 0;
+  function pose(dist) {
+    dist = Math.max(0, Math.min(pathLen, dist));
+    while (hint > 0 && track[hint].d > dist) hint--;
+    while (hint < track.length - 2 && track[hint + 1].d < dist) hint++;
+    const a = track[hint], b = track[hint + 1] || a;
+    const t = b.d > a.d ? (dist - a.d) / (b.d - a.d) : 0;
+    return { x: a.x + (b.x - a.x) * t, y: a.y + (b.y - a.y) * t, ang: a.ang + (b.ang - a.ang) * t };
+  }
+
+  // cancella lo sporco nella striscia spazzata dalla lama
+  // (una lama di traverso che avanza = un tratto largo quanto la lama)
   function wipe(p) {
-    const { bh, m, row, dir, x } = path(p);
+    const target = p * pathLen;
+    if (target <= lastD) return;
     dctx.save();
     dctx.globalCompositeOperation = 'destination-out';
-    dctx.fillStyle = '#000';
-    if (p >= 1) { dctx.fillRect(0, 0, W, H); dctx.restore(); return; }
-    // righe già finite
-    if (row > 0) dctx.fillRect(-m, 0, W + 2 * m, row * bh + 2);
-    // riga in corso
-    const y0 = row * bh - 2;
-    if (dir > 0) dctx.fillRect(-m, y0, x + m, bh + 4);
-    else dctx.fillRect(x, y0, W + m - x, bh + 4);
+    dctx.strokeStyle = '#000';
+    dctx.lineWidth = L;
+    dctx.lineCap = 'round';
+    dctx.lineJoin = 'round';
+    dctx.beginPath();
+    let q = pose(lastD);
+    dctx.moveTo(q.x, q.y);
+    for (let dd = lastD + 6; dd < target; dd += 6) { q = pose(dd); dctx.lineTo(q.x, q.y); }
+    q = pose(target);
+    dctx.lineTo(q.x, q.y);
+    dctx.stroke();
     dctx.restore();
+    lastD = target;
   }
 
   function drawSqueegee(p) {
     const c = fctx;
     c.clearRect(0, 0, W, H);
     if (p <= 0 || p >= 1) return;
-    const { bh, row, dir, x } = path(p);
-    const yc = row * bh + bh / 2;
-    const half = bh * .46;
-    const top = yc - half, bot = yc + half;
+    const q = pose(p * pathLen);
+    c.save();
+    c.translate(q.x, q.y);
+    c.rotate(q.ang);            // asse x locale = direzione del movimento
+    const h = L / 2;
 
-    // scia bagnata subito dietro la lama
-    const wg = c.createLinearGradient(x, 0, x - dir * 46, 0);
-    wg.addColorStop(0, 'rgba(255,255,255,.55)');
+    // scia bagnata dietro la lama
+    const wg = c.createLinearGradient(0, 0, -50, 0);
+    wg.addColorStop(0, 'rgba(255,255,255,.5)');
     wg.addColorStop(1, 'rgba(255,255,255,0)');
     c.fillStyle = wg;
-    c.fillRect(Math.min(x, x - dir * 46), row * bh, 46, bh);
-
-    // qualche goccia sul bordo della lama
-    c.fillStyle = 'rgba(255,255,255,.7)';
+    c.fillRect(-50, -h, 50, L);
+    // goccioline sul bordo
+    c.fillStyle = 'rgba(255,255,255,.75)';
     for (let i = 0; i < 4; i++) {
-      const gy = top + (bh * .9) * ((i * 0.27 + (x * .003)) % 1);
-      c.beginPath(); c.arc(x + dir * 9, gy, 2.2, 0, 7); c.fill();
+      c.beginPath(); c.arc(8, -h + L * ((i * .29 + p * 7) % 1), 2, 0, 7); c.fill();
     }
 
-    // lama: supporto giallo dietro, gomma nera davanti
-    c.save();
-    c.shadowColor = 'rgba(0,0,0,.35)'; c.shadowBlur = 16; c.shadowOffsetX = 4; c.shadowOffsetY = 6;
+    // lama
     c.lineCap = 'round';
-    c.strokeStyle = '#f2c200'; c.lineWidth = 14;
-    c.beginPath(); c.moveTo(x - dir * 5, top); c.lineTo(x - dir * 5, bot); c.stroke();
-    c.restore();
-    c.lineCap = 'round';
-    c.strokeStyle = '#15181d'; c.lineWidth = 6;
-    c.beginPath(); c.moveTo(x + dir * 4, top + 2); c.lineTo(x + dir * 4, bot - 2); c.stroke();
-    c.strokeStyle = 'rgba(255,255,255,.4)'; c.lineWidth = 2;
-    c.beginPath(); c.moveTo(x - dir * 9, top + 4); c.lineTo(x - dir * 9, bot - 4); c.stroke();
-
-    // manico orizzontale, rivolto all'indietro rispetto alla direzione
-    const Lh = Math.max(70, Math.min(110, bh * .7));
-    const hx = x - dir * 14, ex = hx - dir * Lh;
     c.save();
     c.shadowColor = 'rgba(0,0,0,.35)'; c.shadowBlur = 14; c.shadowOffsetX = 4; c.shadowOffsetY = 6;
-    c.strokeStyle = '#ffd43b'; c.lineWidth = 18; c.lineCap = 'round';
-    c.beginPath(); c.moveTo(hx, yc); c.lineTo(ex, yc); c.stroke();
+    c.strokeStyle = '#f2c200'; c.lineWidth = 13;
+    c.beginPath(); c.moveTo(-5, -h); c.lineTo(-5, h); c.stroke();
     c.restore();
-    // impugnatura nera a righe
-    const gx = hx - dir * Lh * .5;
+    c.strokeStyle = '#15181d'; c.lineWidth = 6;
+    c.beginPath(); c.moveTo(3, -h + 2); c.lineTo(3, h - 2); c.stroke();
+    c.strokeStyle = 'rgba(255,255,255,.45)'; c.lineWidth = 2;
+    c.beginPath(); c.moveTo(-9, -h + 4); c.lineTo(-9, h - 4); c.stroke();
+
+    // manico
+    const Lh = Math.max(64, Math.min(100, L * .62));
+    c.save();
+    c.shadowColor = 'rgba(0,0,0,.35)'; c.shadowBlur = 12; c.shadowOffsetX = 4; c.shadowOffsetY = 6;
+    c.strokeStyle = '#ffd43b'; c.lineWidth = 17;
+    c.beginPath(); c.moveTo(-14, 0); c.lineTo(-14 - Lh, 0); c.stroke();
+    c.restore();
     c.lineCap = 'butt';
-    c.strokeStyle = '#15181d'; c.lineWidth = 18;
-    c.beginPath(); c.moveTo(gx, yc); c.lineTo(ex, yc); c.stroke();
+    c.strokeStyle = '#15181d'; c.lineWidth = 17;
+    c.beginPath(); c.moveTo(-14 - Lh * .5, 0); c.lineTo(-14 - Lh, 0); c.stroke();
     c.strokeStyle = '#2d323b'; c.setLineDash([3, 5]);
-    c.beginPath(); c.moveTo(gx, yc); c.lineTo(ex, yc); c.stroke();
+    c.beginPath(); c.moveTo(-14 - Lh * .5, 0); c.lineTo(-14 - Lh, 0); c.stroke();
     c.setLineDash([]);
     c.fillStyle = '#15181d';
-    c.beginPath(); c.arc(ex, yc, 9, 0, 7); c.fill();
-    // collo
+    c.beginPath(); c.arc(-14 - Lh, 0, 8.5, 0, 7); c.fill();
     c.strokeStyle = '#15181d'; c.lineWidth = 10; c.lineCap = 'round';
-    c.beginPath(); c.moveTo(x - dir * 4, yc); c.lineTo(hx, yc); c.stroke();
+    c.beginPath(); c.moveTo(-4, 0); c.lineTo(-14, 0); c.stroke();
+    c.restore();
   }
 
   function setPct(p) {
@@ -255,7 +339,7 @@ const onReady = fn => (siteReady ? fn() : readyQueue.push(fn));
   });
   (document.fonts ? document.fonts.ready : Promise.resolve()).then(tick);
 
-  const MIN = 3400;   // durata minima, così l'effetto si vede sempre
+  const MIN = 4000;   // durata minima, così l'effetto si vede sempre
   const MAX = 7000;   // oltre questo tempo chiude comunque
   const t0 = performance.now();
   let shown = 0;
@@ -275,7 +359,8 @@ const onReady = fn => (siteReady ? fn() : readyQueue.push(fn));
 
   size();
   paintDirt();
-  addEventListener('resize', () => { if (!box.isConnected) return; size(); paintDirt(); wipe(shown); }, { passive: true });
+  buildPath();
+  addEventListener('resize', () => { if (!box.isConnected) return; size(); paintDirt(); buildPath(); wipe(shown); }, { passive: true });
 
   function frame(now) {
     const el = now - t0;
@@ -285,6 +370,8 @@ const onReady = fn => (siteReady ? fn() : readyQueue.push(fn));
     shown += (target - shown) * .2;
     if (target >= 1 && shown > .995) shown = 1;
     wipe(shown);
+    // l'ultimo sporco rimasto sfuma via mentre il tergivetro finisce
+    dirt.style.opacity = shown < .8 ? 1 : Math.max(0, 1 - (shown - .8) / .2);
     drawSqueegee(shown);
     setPct(shown);
     if (shown >= 1) finish();
@@ -600,4 +687,82 @@ function animateNumber(el, to) {
     $('#bizBook').href = waLink(msg);
   }
   render();
+})();
+
+/* =========================================================
+   9. EFFETTO "30 SECONDI" NEL FOOTER
+   Il tergivetro toglie il fango, il numero conta fino a 30,
+   poi esplosione di stelline e riflesso che scorre.
+   ========================================================= */
+(function wow() {
+  const el = $('#wow');
+  if (!el) return;
+  const num = $('.wow-num', el);
+  const STAR = '<path d="M12 0c.8 6.5 4.6 10.9 12 12-7.4 1.1-11.2 5.5-12 12-.8-6.5-4.6-10.9-12-12C7.4 10.9 11.2 6.5 12 0z"/>';
+
+  function burst() {
+    const box = document.createElement('span');
+    box.className = 'burst';
+    el.appendChild(box);
+    const ring = document.createElement('span');
+    ring.className = 'burst-ring';
+    box.appendChild(ring);
+    ring.animate([{ transform: 'scale(.2)', opacity: 1 }, { transform: 'scale(9)', opacity: 0 }], { duration: 900, easing: 'cubic-bezier(.1,.8,.3,1)' });
+
+    const n = innerWidth < 600 ? 18 : 30;
+    for (let i = 0; i < n; i++) {
+      const star = i % 3 !== 0;
+      const p = star ? document.createElementNS('http://www.w3.org/2000/svg', 'svg') : document.createElement('span');
+      if (star) { p.setAttribute('viewBox', '0 0 24 24'); p.innerHTML = STAR; p.classList.add('burst-star'); p.style.setProperty('--s', (10 + Math.random() * 18) + 'px'); }
+      else p.className = 'burst-dot';
+      box.appendChild(p);
+      const ang = (i / n) * Math.PI * 2 + Math.random() * .4;
+      const dist = 90 + Math.random() * (innerWidth < 600 ? 90 : 190);
+      const x = Math.cos(ang) * dist * 1.4, y = Math.sin(ang) * dist * .8;
+      p.animate([
+        { transform: 'translate(0,0) scale(.2) rotate(0)', opacity: 1 },
+        { transform: `translate(${x * .8}px, ${y * .8}px) scale(1.1) rotate(${180 * Math.random()}deg)`, opacity: 1, offset: .55 },
+        { transform: `translate(${x}px, ${y + 40}px) scale(.3) rotate(${360 * Math.random()}deg)`, opacity: 0 },
+      ], { duration: 900 + Math.random() * 600, easing: 'cubic-bezier(.15,.8,.3,1)', fill: 'forwards' });
+    }
+    setTimeout(() => box.remove(), 1700);
+  }
+
+  function count() {
+    const t0 = performance.now();
+    const step = now => {
+      const p = Math.min(1, (now - t0) / 1000);
+      num.textContent = Math.round(30 * (1 - Math.pow(1 - p, 2)));
+      if (p < 1) requestAnimationFrame(step);
+    };
+    requestAnimationFrame(step);
+  }
+
+  let played = false;
+  function play() {
+    if (played) return;
+    played = true;
+    if (reduceMotion) return;
+    el.classList.add('go');
+    count();
+    setTimeout(() => { el.classList.add('boom'); burst(); }, 1050);
+  }
+
+  // si riattiva passandoci sopra o toccandolo
+  let last = 0;
+  const again = () => {
+    if (!el.classList.contains('boom') || performance.now() - last < 900) return;
+    last = performance.now();
+    el.classList.remove('boom'); void el.offsetWidth; el.classList.add('boom');
+    burst();
+  };
+  el.addEventListener('mouseenter', again);
+  el.addEventListener('click', again);
+
+  onReady(() => {
+    const io = new IntersectionObserver(es => {
+      if (es[0].isIntersecting) { play(); io.disconnect(); }
+    }, { threshold: .9 });
+    io.observe(el);
+  });
 })();
