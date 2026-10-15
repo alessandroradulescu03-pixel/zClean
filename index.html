@@ -1,0 +1,393 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ZClean | Impresa di pulizie a Romano di Lombardia (BG) – Case, uffici e condomini</title>
+  <meta name="description" content="ZClean, impresa di pulizie a Romano di Lombardia e nella Bassa Bergamasca. Case, uffici, condomini e vetri. Calcola il prezzo in 30 secondi e prenota su WhatsApp. Attivi 24/7.">
+  <meta name="theme-color" content="#0c1b33">
+  <meta property="og:title" content="ZClean | Pulizie a Romano di Lombardia, prezzo in 30 secondi">
+  <meta property="og:description" content="Case, uffici, condomini e vetri. Calcola il prezzo e prenota su WhatsApp.">
+  <meta property="og:type" content="website">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%230c1b33'/%3E%3Ctext x='32' y='45' font-family='Arial' font-weight='900' font-size='40' text-anchor='middle' fill='%23ffd43b'%3Ez%3C/text%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700;12..96,800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <script>document.documentElement.classList.add('js');</script>
+</head>
+<body class="loading">
+
+  <!-- ============ LOADER: lo sporco che viene pulito dal tergivetro ============ -->
+  <div id="loader" aria-hidden="true">
+    <canvas id="dirt"></canvas>
+    <canvas id="wiper"></canvas>
+    <div class="loader-ring">
+      <svg viewBox="0 0 120 120">
+        <circle class="ring-track" cx="60" cy="60" r="52"/>
+        <circle class="ring-bar" id="ringBar" cx="60" cy="60" r="52"/>
+      </svg>
+      <div class="ring-text">
+        <strong id="ldPct">0%</strong>
+        <span>Pulizia<br>in corso</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ HEADER ============ -->
+  <header class="site-header" id="top">
+    <div class="wrap header-inner">
+      <a href="#top" class="logo" aria-label="ZClean, torna su">
+        <span class="logo-z">z</span><span class="logo-word">Clean</span>
+        <svg class="logo-spark" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 0c.8 6.5 4.6 10.9 12 12-7.4 1.1-11.2 5.5-12 12-.8-6.5-4.6-10.9-12-12C7.4 10.9 11.2 6.5 12 0z"/></svg>
+      </a>
+      <nav class="main-nav" id="mainNav" aria-label="Menu principale">
+        <a href="#servizi">Servizi</a>
+        <a href="#prezzi">Prezzi case</a>
+        <a href="#aziende">Aziende</a>
+        <a href="#zone">Zone</a>
+        <a href="#faq">FAQ</a>
+        <a href="tel:+393914060514" class="nav-phone">391 406 0514</a>
+        <a href="#prezzi" class="btn btn-yellow btn-sm">Calcola il prezzo</a>
+      </nav>
+      <button class="burger" id="burger" aria-label="Apri il menu" aria-expanded="false" aria-controls="mainNav">
+        <span></span><span></span>
+      </button>
+    </div>
+  </header>
+
+  <main>
+
+    <!-- ============ HERO ============ -->
+    <section class="hero">
+      <div class="wrap hero-grid">
+        <div class="hero-copy">
+          <p class="hero-badge reveal"><span class="dot-live"></span> Attivi 24/7 · Romano di Lombardia (BG)</p>
+          <h1 class="reveal">Pulizie per case e aziende, <span class="hl sparkle">prezzo in 30&nbsp;secondi.</span></h1>
+          <p class="hero-lead reveal">Scegli il servizio, vedi subito quanto costa e prenoti su WhatsApp. Oltre 20 addetti, operativi giorno e notte: quando apri l'ufficio, è già tutto pulito.</p>
+          <div class="hero-cta reveal">
+            <a href="#prezzi" class="btn btn-navy">Calcola il prezzo <span class="arr">→</span></a>
+            <a href="#aziende" class="btn btn-ghost">Sei un'azienda?</a>
+          </div>
+          <ul class="checks reveal">
+            <li>Aperti tutti i giorni, anche di notte</li>
+            <li>Prodotti e attrezzatura inclusi</li>
+            <li>Case, uffici, condomini e vetri</li>
+            <li>Preventivo chiaro, intervento rapido</li>
+          </ul>
+        </div>
+
+        <div class="hero-visual">
+          <div class="ba reveal" id="ba" style="--pos:55%">
+            <img src="assets/dopo.jpg" class="ba-img" alt="Ufficio dopo la pulizia di ZClean: scrivanie in ordine e pavimento pulito" width="700" height="768">
+            <div class="ba-before">
+              <img src="assets/prima.jpg" class="ba-img" alt="Lo stesso ufficio prima della pulizia, con carte e rifiuti a terra" width="700" height="768">
+            </div>
+            <span class="ba-tag tag-after">Dopo</span>
+            <span class="ba-tag tag-before">Prima</span>
+            <div class="ba-squeegee" aria-hidden="true">
+              <span class="sq-blade"></span>
+              <span class="sq-handle"><i></i></span>
+            </div>
+            <span class="ba-hint">Trascina il tergivetro <span class="arr">→</span></span>
+            <input type="range" class="ba-range sr-only" min="0" max="100" value="55" aria-label="Confronta prima e dopo la pulizia">
+          </div>
+          <div class="float float-hero" data-speed="-0.18" data-rot="0.04" data-base="14">
+            <img src="assets/spruzzino.png" alt="" width="294" height="711">
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ NUMERI ============ -->
+    <section class="stats" aria-label="ZClean in numeri">
+      <div class="bubbles" data-bubbles="14"></div>
+      <div class="wrap stats-grid">
+        <div class="stat reveal"><strong><span data-count="500">0</span>+</strong><span>interventi portati a termine</span></div>
+        <div class="stat reveal"><strong><span data-count="20">0</span>+</strong><span>addetti alle pulizie nel team</span></div>
+        <div class="stat reveal"><strong>24/7</strong><span>operativi tutti i giorni, anche di notte</span></div>
+        <div class="stat reveal"><strong><span data-count="100">0</span>%</strong><span>clienti soddisfatti</span></div>
+      </div>
+    </section>
+
+    <!-- ============ SERVIZI ============ -->
+    <section class="section" id="servizi">
+      <div class="wrap">
+        <div class="section-head reveal">
+          <p class="eyebrow">Servizi</p>
+          <h2>Una squadra sola per casa, ufficio e condominio.</h2>
+        </div>
+        <div class="services">
+          <article class="service reveal">
+            <div class="ico"><svg viewBox="0 0 24 24"><path d="M3 11 12 4l9 7"/><path d="M5 10v10h14V10"/><path d="M10 20v-6h4v6"/></svg></div>
+            <h3>Case e appartamenti</h3>
+            <p>Pulizie ordinarie ogni settimana o quando serve, e pulizie profonde di stagione.</p>
+          </article>
+          <article class="service reveal">
+            <div class="ico"><svg viewBox="0 0 24 24"><rect x="4" y="3" width="16" height="18" rx="1.5"/><path d="M8 7h2M14 7h2M8 11h2M14 11h2M8 15h2M14 15h2"/></svg></div>
+            <h3>Uffici e negozi</h3>
+            <p>Lavoriamo la sera o di notte, così la tua attività non si ferma mai.</p>
+          </article>
+          <article class="service reveal">
+            <div class="ico"><svg viewBox="0 0 24 24"><path d="M4 20h4v-4h4v-4h4V8h4"/><path d="M4 20h16"/></svg></div>
+            <h3>Condomini e scale</h3>
+            <p>Androni, scale, ascensori e parti comuni con un calendario fisso.</p>
+          </article>
+          <article class="service reveal">
+            <div class="ico"><svg viewBox="0 0 24 24"><rect x="4" y="3" width="16" height="18" rx="1.5"/><path d="M12 3v18M4 12h16"/><path d="m7 7 2-2M15 15l2-2"/></svg></div>
+            <h3>Vetri e vetrate</h3>
+            <p>Finestre, vetrine e vetrate anche in altezza. Zero aloni, garantito.</p>
+          </article>
+          <article class="service reveal">
+            <div class="ico"><svg viewBox="0 0 24 24"><path d="M3 9h11v9H3z"/><path d="M14 12h4l3 3v3h-7"/><circle cx="7" cy="19" r="1.6"/><circle cx="17" cy="19" r="1.6"/></svg></div>
+            <h3>Fine lavori e traslochi</h3>
+            <p>Pulizia post-cantiere e di fine locazione, per consegnare la casa perfetta.</p>
+          </article>
+          <article class="service reveal">
+            <div class="ico"><svg viewBox="0 0 24 24"><path d="M4 14h8l3-3h3"/><path d="M18 9v4"/><path d="M7 14v6"/><path d="M20 6c0 1-1 2-1 3M22 8c0 1-1 2-1 3"/></svg></div>
+            <h3>Lavaggi a pressione</h3>
+            <p>Piazzali, cortili, parcheggi e superfici esterne tornano come nuovi.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ CALCOLATORE CASE ============ -->
+    <section class="section section-calc" id="prezzi">
+      <div class="wrap">
+        <div class="calc-head reveal">
+          <div>
+            <p class="eyebrow">Prezzo e prenotazione</p>
+            <h2>Il prezzo della tua casa, prima ancora di chiamare.</h2>
+          </div>
+          <p class="calc-intro">Niente «a partire da» e niente sopralluogo per le case: il prezzo che vedi include prodotti, attrezzatura e IVA.</p>
+        </div>
+
+        <div class="calc reveal">
+          <form class="calc-form" id="homeCalc" onsubmit="return false">
+            <div class="steps" aria-hidden="true">
+              <span class="on">1. La tua casa</span><span class="on">2. Extra</span><span>3. Prenota</span>
+            </div>
+
+            <fieldset>
+              <legend>Tipo di pulizia</legend>
+              <div class="opts">
+                <label class="opt"><input type="radio" name="tipo" value="ordinaria" checked><b>Ordinaria</b><small>per tenerla sempre in ordine</small></label>
+                <label class="opt"><input type="radio" name="tipo" value="profonda"><b>Profonda</b><small>prima pulizia o di stagione</small></label>
+                <label class="opt"><input type="radio" name="tipo" value="fine"><b>Fine locazione</b><small>trasloco o fine lavori</small></label>
+              </div>
+            </fieldset>
+
+            <fieldset>
+              <legend>Com'è la casa</legend>
+              <div class="steppers">
+                <div class="stepper" data-key="camere" data-min="1" data-max="6">
+                  <span>Camere</span>
+                  <button type="button" data-step="-1" aria-label="Una camera in meno">−</button>
+                  <output>2</output>
+                  <button type="button" data-step="1" aria-label="Una camera in più">+</button>
+                </div>
+                <div class="stepper" data-key="bagni" data-min="1" data-max="4">
+                  <span>Bagni</span>
+                  <button type="button" data-step="-1" aria-label="Un bagno in meno">−</button>
+                  <output>1</output>
+                  <button type="button" data-step="1" aria-label="Un bagno in più">+</button>
+                </div>
+              </div>
+            </fieldset>
+
+            <fieldset>
+              <legend>Extra</legend>
+              <div class="extras" id="extras"></div>
+            </fieldset>
+          </form>
+
+          <aside class="summary" aria-live="polite">
+            <p class="sum-kicker" id="sumKicker">Pulizia ordinaria · prezzo fisso</p>
+            <p class="sum-price">€<span id="sumPrice">0</span></p>
+            <p class="sum-sub">totale, IVA inclusa</p>
+            <ul class="sum-lines" id="sumLines"></ul>
+            <div class="sum-tiles">
+              <div><strong id="sumTime">–</strong><span id="sumTeam">–</span></div>
+              <div><strong>Prodotti</strong><span>e attrezzatura inclusi</span></div>
+            </div>
+            <a class="btn btn-yellow btn-block" id="homeBook" href="#" target="_blank" rel="noopener">Prenota su WhatsApp <span class="arr">→</span></a>
+            <a class="sum-call" href="tel:+393914060514">Oppure chiama il 391 406 0514</a>
+            <div class="float float-calc" data-speed="-0.12" data-rot="-0.03" data-base="-12">
+              <img src="assets/spruzzino.png" alt="" width="294" height="711" loading="lazy">
+            </div>
+          </aside>
+          <div class="sponge float" data-speed="0.1" data-rot="0.05" data-base="-14" aria-hidden="true"><i></i></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ AZIENDE ============ -->
+    <section class="section" id="aziende">
+      <div class="wrap">
+        <div class="biz">
+          <div class="bubbles" data-bubbles="18"></div>
+          <div class="biz-grid">
+            <div class="biz-form reveal">
+              <p class="eyebrow eyebrow-light">Aziende</p>
+              <h2>Uffici, studi e condomini, puliti fuori orario.</h2>
+
+              <p class="biz-label">Tipo di locale</p>
+              <div class="chips" id="bizType" role="radiogroup" aria-label="Tipo di locale">
+                <button type="button" class="chip on" data-v="ufficio" role="radio" aria-checked="true">Ufficio</button>
+                <button type="button" class="chip" data-v="studio" role="radio" aria-checked="false">Studio medico</button>
+                <button type="button" class="chip" data-v="negozio" role="radio" aria-checked="false">Negozio</button>
+                <button type="button" class="chip" data-v="palestra" role="radio" aria-checked="false">Palestra</button>
+                <button type="button" class="chip" data-v="condominio" role="radio" aria-checked="false">Condominio</button>
+              </div>
+
+              <div class="biz-row">
+                <label class="biz-label" for="bizArea">Superficie</label>
+                <output class="biz-area-out" id="bizAreaOut">350 m²</output>
+              </div>
+              <input type="range" id="bizArea" class="range" min="50" max="2000" step="10" value="350">
+
+              <p class="biz-label">Passaggi a settimana</p>
+              <div class="visits" id="bizVisits" role="radiogroup" aria-label="Passaggi a settimana">
+                <button type="button" data-v="1" role="radio" aria-checked="false">1</button>
+                <button type="button" data-v="2" role="radio" aria-checked="false">2</button>
+                <button type="button" data-v="3" class="on" role="radio" aria-checked="true">3</button>
+                <button type="button" data-v="5" role="radio" aria-checked="false">5</button>
+                <button type="button" data-v="7" role="radio" aria-checked="false">7</button>
+              </div>
+            </div>
+
+            <div class="biz-side reveal">
+              <p class="biz-note">Ti diamo subito una stima. Poi facciamo un sopralluogo gratuito e ti confermiamo il prezzo.</p>
+              <div class="biz-card" aria-live="polite">
+                <p class="sum-kicker dark">Stima a passaggio</p>
+                <p class="biz-price">€<span id="bizPrice">0</span><small>/passaggio</small></p>
+                <p class="biz-month" id="bizMonth"></p>
+                <ul class="biz-list" id="bizList"></ul>
+                <a class="btn btn-navy btn-block" id="bizBook" href="#" target="_blank" rel="noopener">Prenota un sopralluogo gratuito <span class="arr">→</span></a>
+              </div>
+              <div class="float float-biz" data-speed="-0.15" data-rot="0.05" data-base="10">
+                <img src="assets/spruzzino.png" alt="" width="294" height="711" loading="lazy">
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ ZONE ============ -->
+    <section class="section" id="zone">
+      <div class="wrap zone-grid">
+        <div class="reveal">
+          <p class="eyebrow">Dove lavoriamo</p>
+          <h2>Romano di Lombardia e tutta la Bassa Bergamasca.</h2>
+          <p class="zone-text">La sede è a Romano di Lombardia, in via Garavelli. Da lì raggiungiamo in pochi minuti tutti i paesi della zona.</p>
+          <ul class="zone-chips">
+            <li>Romano di Lombardia</li><li>Covo</li><li>Calcio</li><li>Antegnate</li><li>Fara Olivana con Sola</li><li>Bariano</li><li>Morengo</li><li>Cortenuova</li><li>Martinengo</li><li>Ghisalba</li><li>Cologno al Serio</li><li>Treviglio</li><li>Caravaggio</li><li>Urgnano</li>
+          </ul>
+        </div>
+        <div class="map reveal">
+          <iframe title="Mappa della sede ZClean a Romano di Lombardia" src="https://www.google.com/maps?q=Via+Giovanni+Battista+Garavelli+7,+24058+Romano+di+Lombardia+BG&output=embed" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ FAQ ============ -->
+    <section class="section section-faq" id="faq">
+      <div class="wrap faq-wrap">
+        <div class="section-head reveal">
+          <p class="eyebrow">Domande frequenti</p>
+          <h2>Tutto quello che ci chiedono prima di prenotare.</h2>
+        </div>
+        <div class="faq reveal">
+          <details>
+            <summary>Portate voi prodotti e attrezzatura?</summary>
+            <p>Sì. Arriviamo con prodotti professionali e tutta l'attrezzatura necessaria: non devi comprare niente.</p>
+          </details>
+          <details>
+            <summary>Lavorate anche di sera, di notte o nel weekend?</summary>
+            <p>Sì, siamo operativi tutti i giorni, 24 ore su 24. Per uffici e negozi lavoriamo fuori orario, così non disturbiamo nessuno.</p>
+          </details>
+          <details>
+            <summary>Devo essere in casa durante la pulizia?</summary>
+            <p>Non è necessario. Puoi lasciarci le chiavi: ti scriviamo su WhatsApp quando iniziamo e quando abbiamo finito.</p>
+          </details>
+          <details>
+            <summary>Il prezzo del calcolatore è quello finale?</summary>
+            <p>Per le case sì, se la casa corrisponde a quello che hai indicato. Per le aziende è una stima: il prezzo definitivo lo confermiamo dopo il sopralluogo gratuito.</p>
+          </details>
+          <details>
+            <summary>Fate anche pulizie una tantum?</summary>
+            <p>Certo: pulizie di fondo, fine cantiere, traslochi e fine locazione, anche senza un contratto continuativo.</p>
+          </details>
+          <details>
+            <summary>Come si paga?</summary>
+            <p>A lavoro finito. Per le aziende con contratto emettiamo fattura mensile.</p>
+          </details>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ CTA FINALE + FOOTER ============ -->
+    <section class="final">
+      <div class="bubbles" data-bubbles="16"></div>
+      <div class="wrap final-inner">
+        <h2 class="reveal">Il tuo prezzo è a <span class="y sparkle">30&nbsp;secondi</span> di distanza.</h2>
+        <div class="final-cta reveal">
+          <a href="#prezzi" class="btn btn-yellow">Calcola il prezzo <span class="arr">→</span></a>
+          <a href="tel:+393914060514" class="btn btn-outline-light">391 406 0514</a>
+        </div>
+        <div class="float float-final" data-speed="-0.2" data-rot="0.06" data-base="22">
+          <img src="assets/spruzzino.png" alt="" width="294" height="711" loading="lazy">
+        </div>
+      </div>
+
+      <footer class="footer">
+        <div class="wrap footer-grid">
+          <div class="foot-brand">
+            <a href="#top" class="logo logo-light" aria-label="ZClean, torna su">
+              <span class="logo-z">z</span><span class="logo-word">Clean</span>
+              <svg class="logo-spark" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 0c.8 6.5 4.6 10.9 12 12-7.4 1.1-11.2 5.5-12 12-.8-6.5-4.6-10.9-12-12C7.4 10.9 11.2 6.5 12 0z"/></svg>
+            </a>
+            <p>Via Giovanni Battista Garavelli 7<br>24058 Romano di Lombardia (BG)<br>Aperti tutti i giorni, 24 ore su 24</p>
+          </div>
+          <div>
+            <h4>Case</h4>
+            <a href="#prezzi">Pulizie ordinarie</a>
+            <a href="#prezzi">Pulizie profonde</a>
+            <a href="#prezzi">Fine locazione</a>
+            <a href="#servizi">Vetri e vetrate</a>
+          </div>
+          <div>
+            <h4>Aziende</h4>
+            <a href="#aziende">Uffici</a>
+            <a href="#aziende">Studi medici</a>
+            <a href="#aziende">Negozi e palestre</a>
+            <a href="#aziende">Condomini</a>
+          </div>
+          <div>
+            <h4>Contatti</h4>
+            <a href="tel:+393914060514">391 406 0514</a>
+            <a href="https://wa.me/393914060514" target="_blank" rel="noopener">WhatsApp</a>
+            <a href="mailto:zakariaelayadi00@gmail.com">Scrivici una email</a>
+            <a href="https://www.instagram.com/z.clean_/" target="_blank" rel="noopener">Instagram</a>
+            <a href="https://www.facebook.com/share/1AUZKpRqfK/" target="_blank" rel="noopener">Facebook</a>
+          </div>
+        </div>
+        <div class="wrap foot-bottom">
+          <span>© <span id="year">2026</span> ZClean · Impresa di pulizie · Romano di Lombardia (BG)</span>
+          <span><a href="#">Privacy</a> · <a href="#">Cookie</a></span>
+        </div>
+      </footer>
+    </section>
+  </main>
+
+  <!-- Barra fissa in basso (solo mobile) -->
+  <div class="mobile-bar" id="mobileBar">
+    <a href="tel:+393914060514" class="btn btn-ghost">Chiama</a>
+    <a href="#prezzi" class="btn btn-navy" id="mobileBook">Calcola il prezzo</a>
+  </div>
+
+  <script src="script.js" defer></script>
+</body>
+</html>
