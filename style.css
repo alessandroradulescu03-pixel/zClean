@@ -500,7 +500,7 @@ legend { font-weight: 800; font-size: .95rem; margin-bottom: 12px; }
 .burst { position: absolute; left: 50%; top: 50%; pointer-events: none; z-index: 3; }
 .burst-star { position: absolute; width: var(--s); height: var(--s); margin: calc(var(--s) / -2) 0 0 calc(var(--s) / -2); fill: var(--yellow); }
 .burst-dot { position: absolute; width: 6px; height: 6px; margin: -3px 0 0 -3px; border-radius: 50%; background: #fff; }
-.burst-ring { position: absolute; width: 40px; height: 40px; margin: -20px 0 0 -20px; border-radius: 50%; border: 3px solid var(--yellow); }
+.burst-ring { position: absolute; width: 40px; height: 40px; margin: -20px 0 0 -20px; border-radius: 50%; border: 3px solid var(--yellow); opacity: 0; }
 
 /* ---------- Stelline ---------- */
 .sparkle { position: relative; display: inline-block; }

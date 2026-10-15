@@ -707,7 +707,7 @@ function animateNumber(el, to) {
     const ring = document.createElement('span');
     ring.className = 'burst-ring';
     box.appendChild(ring);
-    ring.animate([{ transform: 'scale(.2)', opacity: 1 }, { transform: 'scale(9)', opacity: 0 }], { duration: 900, easing: 'cubic-bezier(.1,.8,.3,1)' });
+    ring.animate([{ transform: 'scale(.2)', opacity: 1 }, { transform: 'scale(9)', opacity: 0 }], { duration: 900, easing: 'cubic-bezier(.1,.8,.3,1)', fill: 'forwards' });
 
     const n = innerWidth < 600 ? 18 : 30;
     for (let i = 0; i < n; i++) {
