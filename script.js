@@ -149,22 +149,33 @@ const onReady = fn => (siteReady ? fn() : readyQueue.push(fn));
     c.fillRect(0, 0, W, H);
   }
 
-  // Perno del tergivetro: angolo in basso a sinistra (un po' fuori schermo)
-  const P = () => ({ x: -40, y: H + 40 });
-  const R = () => Math.hypot(W + 80, H + 80) + 60;
-  const angleFor = p => (Math.PI / 2) * (1 - p); // 90° (in verticale) → 0° (in orizzontale)
+  // Percorso del tergivetro: passate orizzontali avanti e indietro,
+  // una riga sotto l'altra, come quando si lava un vetro.
+  function path(p) {
+    const rows = Math.max(4, Math.min(7, Math.round(H / 165)));
+    const bh = H / rows;                       // altezza di ogni passata = lunghezza lama
+    const m = Math.min(140, bh * .9) + 30;     // esce dallo schermo prima di cambiare riga
+    const L = W + 2 * m;
+    const pos = Math.min(p, .99999) * rows * L;
+    const row = Math.floor(pos / L);
+    const s = pos - row * L;
+    const dir = row % 2 === 0 ? 1 : -1;        // riga pari → destra, dispari → sinistra
+    const x = dir > 0 ? -m + s : W + m - s;
+    return { rows, bh, m, row, dir, x };
+  }
 
   function wipe(p) {
-    const { x, y } = P();
-    const a = angleFor(p);
-    // cancella lo sporco nella zona già passata
+    const { bh, m, row, dir, x } = path(p);
     dctx.save();
     dctx.globalCompositeOperation = 'destination-out';
-    dctx.beginPath();
-    dctx.moveTo(x, y);
-    dctx.arc(x, y, R(), -Math.PI / 2, -a, false);
-    dctx.closePath();
-    dctx.fill();
+    dctx.fillStyle = '#000';
+    if (p >= 1) { dctx.fillRect(0, 0, W, H); dctx.restore(); return; }
+    // righe già finite
+    if (row > 0) dctx.fillRect(-m, 0, W + 2 * m, row * bh + 2);
+    // riga in corso
+    const y0 = row * bh - 2;
+    if (dir > 0) dctx.fillRect(-m, y0, x + m, bh + 4);
+    else dctx.fillRect(x, y0, W + m - x, bh + 4);
     dctx.restore();
   }
 
@@ -172,61 +183,59 @@ const onReady = fn => (siteReady ? fn() : readyQueue.push(fn));
     const c = fctx;
     c.clearRect(0, 0, W, H);
     if (p <= 0 || p >= 1) return;
-    const { x, y } = P();
-    const a = angleFor(p);
-    const RR = R();
-    const d = { x: Math.cos(a), y: -Math.sin(a) };   // direzione della lama
-    const n = { x: Math.sin(a), y: Math.cos(a) };     // direzione in cui avanza
+    const { bh, row, dir, x } = path(p);
+    const yc = row * bh + bh / 2;
+    const half = bh * .46;
+    const top = yc - half, bot = yc + half;
 
-    // scia bagnata dietro la lama
-    for (let k = 0; k < 7; k++) {
-      c.fillStyle = `rgba(255,255,255,${.16 * (1 - k / 7)})`;
-      c.beginPath();
-      c.moveTo(x, y);
-      c.arc(x, y, RR, -a - (k + 1) * .012, -a - k * .012, false);
-      c.closePath(); c.fill();
+    // scia bagnata subito dietro la lama
+    const wg = c.createLinearGradient(x, 0, x - dir * 46, 0);
+    wg.addColorStop(0, 'rgba(255,255,255,.55)');
+    wg.addColorStop(1, 'rgba(255,255,255,0)');
+    c.fillStyle = wg;
+    c.fillRect(Math.min(x, x - dir * 46), row * bh, 46, bh);
+
+    // qualche goccia sul bordo della lama
+    c.fillStyle = 'rgba(255,255,255,.7)';
+    for (let i = 0; i < 4; i++) {
+      const gy = top + (bh * .9) * ((i * 0.27 + (x * .003)) % 1);
+      c.beginPath(); c.arc(x + dir * 9, gy, 2.2, 0, 7); c.fill();
     }
 
-    const line = (ox, oy, w, col) => {
-      c.strokeStyle = col; c.lineWidth = w; c.lineCap = 'round';
-      c.beginPath();
-      c.moveTo(x + ox, y + oy);
-      c.lineTo(x + d.x * RR + ox, y + d.y * RR + oy);
-      c.stroke();
-    };
+    // lama: supporto giallo dietro, gomma nera davanti
     c.save();
-    c.shadowColor = 'rgba(0,0,0,.35)'; c.shadowBlur = 22; c.shadowOffsetX = 6; c.shadowOffsetY = 8;
-    line(-n.x * 9, -n.y * 9, 18, '#f2c200');   // supporto giallo
-    c.restore();
-    line(n.x * 4, n.y * 4, 8, '#15181d');      // gomma nera
-    line(-n.x * 14, -n.y * 14, 3, 'rgba(255,255,255,.35)'); // riflesso
-
-    // manico: a metà del tratto visibile della lama, rivolto all'indietro
-    const tx = d.x > .001 ? (W + 40) / d.x : Infinity;
-    const ty = d.y < -.001 ? (H + 40) / -d.y : Infinity;
-    const t = Math.min(tx, ty) * .5;
-    const hx = x + d.x * t - n.x * 16, hy = y + d.y * t - n.y * 16;
-    const L = Math.min(170, Math.max(110, W * .12));
-    const ex = hx - n.x * L, ey = hy - n.y * L;
-    c.save();
+    c.shadowColor = 'rgba(0,0,0,.35)'; c.shadowBlur = 16; c.shadowOffsetX = 4; c.shadowOffsetY = 6;
     c.lineCap = 'round';
-    c.shadowColor = 'rgba(0,0,0,.35)'; c.shadowBlur = 18; c.shadowOffsetX = 6; c.shadowOffsetY = 8;
-    c.strokeStyle = '#ffd43b'; c.lineWidth = 30;
-    c.beginPath(); c.moveTo(hx, hy); c.lineTo(ex, ey); c.stroke();
+    c.strokeStyle = '#f2c200'; c.lineWidth = 14;
+    c.beginPath(); c.moveTo(x - dir * 5, top); c.lineTo(x - dir * 5, bot); c.stroke();
+    c.restore();
+    c.lineCap = 'round';
+    c.strokeStyle = '#15181d'; c.lineWidth = 6;
+    c.beginPath(); c.moveTo(x + dir * 4, top + 2); c.lineTo(x + dir * 4, bot - 2); c.stroke();
+    c.strokeStyle = 'rgba(255,255,255,.4)'; c.lineWidth = 2;
+    c.beginPath(); c.moveTo(x - dir * 9, top + 4); c.lineTo(x - dir * 9, bot - 4); c.stroke();
+
+    // manico orizzontale, rivolto all'indietro rispetto alla direzione
+    const Lh = Math.max(70, Math.min(110, bh * .7));
+    const hx = x - dir * 14, ex = hx - dir * Lh;
+    c.save();
+    c.shadowColor = 'rgba(0,0,0,.35)'; c.shadowBlur = 14; c.shadowOffsetX = 4; c.shadowOffsetY = 6;
+    c.strokeStyle = '#ffd43b'; c.lineWidth = 18; c.lineCap = 'round';
+    c.beginPath(); c.moveTo(hx, yc); c.lineTo(ex, yc); c.stroke();
     c.restore();
     // impugnatura nera a righe
+    const gx = hx - dir * Lh * .5;
     c.lineCap = 'butt';
-    c.strokeStyle = '#15181d'; c.lineWidth = 30;
-    const gx = hx - n.x * L * .55, gy = hy - n.y * L * .55;
-    c.beginPath(); c.moveTo(gx, gy); c.lineTo(ex, ey); c.stroke();
-    c.strokeStyle = '#2d323b'; c.lineWidth = 30; c.setLineDash([4, 7]);
-    c.beginPath(); c.moveTo(gx, gy); c.lineTo(ex, ey); c.stroke();
+    c.strokeStyle = '#15181d'; c.lineWidth = 18;
+    c.beginPath(); c.moveTo(gx, yc); c.lineTo(ex, yc); c.stroke();
+    c.strokeStyle = '#2d323b'; c.setLineDash([3, 5]);
+    c.beginPath(); c.moveTo(gx, yc); c.lineTo(ex, yc); c.stroke();
     c.setLineDash([]);
     c.fillStyle = '#15181d';
-    c.beginPath(); c.arc(ex, ey, 15, 0, 7); c.fill();
-    // collo che unisce manico e lama
-    c.strokeStyle = '#15181d'; c.lineWidth = 14; c.lineCap = 'round';
-    c.beginPath(); c.moveTo(hx + n.x * 8, hy + n.y * 8); c.lineTo(hx - n.x * 6, hy - n.y * 6); c.stroke();
+    c.beginPath(); c.arc(ex, yc, 9, 0, 7); c.fill();
+    // collo
+    c.strokeStyle = '#15181d'; c.lineWidth = 10; c.lineCap = 'round';
+    c.beginPath(); c.moveTo(x - dir * 4, yc); c.lineTo(hx, yc); c.stroke();
   }
 
   function setPct(p) {
@@ -246,7 +255,7 @@ const onReady = fn => (siteReady ? fn() : readyQueue.push(fn));
   });
   (document.fonts ? document.fonts.ready : Promise.resolve()).then(tick);
 
-  const MIN = 2600;   // durata minima, così l'effetto si vede sempre
+  const MIN = 3400;   // durata minima, così l'effetto si vede sempre
   const MAX = 7000;   // oltre questo tempo chiude comunque
   const t0 = performance.now();
   let shown = 0;
@@ -272,9 +281,8 @@ const onReady = fn => (siteReady ? fn() : readyQueue.push(fn));
     const el = now - t0;
     const real = el > MAX ? 1 : loaded / total;
     const time = Math.min(1, el / MIN);
-    const easedTime = 1 - Math.pow(1 - time, 1.6);
-    const target = Math.min(real, easedTime);
-    shown += (target - shown) * .12;
+    const target = Math.min(real, time);
+    shown += (target - shown) * .2;
     if (target >= 1 && shown > .995) shown = 1;
     wipe(shown);
     drawSqueegee(shown);
