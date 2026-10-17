@@ -118,19 +118,13 @@ p { margin: 0; }
   transition: border-color .3s, box-shadow .3s;
 }
 .site-header.scrolled { border-color: var(--line); box-shadow: 0 8px 30px -22px rgba(12, 27, 51, .5); }
-.header-inner { display: flex; align-items: center; justify-content: space-between; height: 74px; }
+.header-inner { display: flex; align-items: center; justify-content: space-between; height: 86px; }
 
-.logo { display: inline-flex; align-items: center; text-decoration: none; position: relative; font-family: var(--head); }
-.logo-z {
-  display: grid; place-items: center; width: 38px; height: 38px; margin-right: 4px;
-  border-radius: 11px; background: var(--navy); color: var(--yellow);
-  font-weight: 800; font-size: 1.6rem; line-height: 1; padding-bottom: 4px;
-  transform: rotate(-6deg);
-}
-.logo-word { font-weight: 800; font-size: 1.55rem; letter-spacing: -.04em; color: var(--navy); }
-.logo-spark { width: 13px; height: 13px; fill: var(--yellow-2); position: absolute; top: -4px; right: -12px; animation: twinkle 2.6s ease-in-out infinite; }
-.logo-light .logo-z { background: var(--yellow); color: var(--navy); }
-.logo-light .logo-word { color: #fff; }
+.logo { display: inline-flex; align-items: center; text-decoration: none; transition: transform .3s var(--ease); }
+.logo:hover { transform: rotate(-2deg) scale(1.04); }
+.logo img { display: block; height: 76px; width: auto; }
+.logo-light img { height: 100px; }
+@media (max-width: 640px) { .logo img { height: 60px; } }
 
 .main-nav { display: flex; align-items: center; gap: 26px; }
 .main-nav a { text-decoration: none; font-weight: 600; font-size: .95rem; }
@@ -547,7 +541,7 @@ legend { font-weight: 800; font-size: .95rem; margin-bottom: 12px; }
 @media (max-width: 860px) {
   .burger { display: block; }
   .main-nav {
-    position: fixed; inset: 74px 0 auto 0; flex-direction: column; align-items: stretch; gap: 0;
+    position: fixed; inset: 86px 0 auto 0; flex-direction: column; align-items: stretch; gap: 0;
     background: var(--bg); padding: 10px 20px 24px; border-bottom: 1px solid var(--line);
     transform: translateY(-120%); transition: transform .4s var(--ease); z-index: -1;
     box-shadow: 0 20px 40px -20px rgba(12, 27, 51, .4);

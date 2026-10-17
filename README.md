@@ -20,7 +20,7 @@ Per pubblicarlo: GitHub Pages oppure Vercel, cartella principale, nessuna config
 ## Da sistemare con il cliente
 - **Prezzi**: sono di esempio. Si cambiano tutti in cima a `script.js`, nell'oggetto `CONFIG`
 - **Testi da confermare**: FAQ (chiavi, pagamenti), elenco dei paesi serviti, servizi
-- **Logo**: per ora è una scritta "zClean"
+- **Logo**: inserito (`assets/logo.webp`, originale in `assets/logo-originale.png`). Favicon in `assets/favicon.png`
 - **Foto**: `assets/prima.jpg` e `assets/dopo.jpg` (stesse dimensioni). Con foto vere di un loro lavoro rende ancora di più
 - **Email**: ora è quella Gmail del sito attuale
 - Pagine Privacy e Cookie (link nel footer)
@@ -30,5 +30,5 @@ Per pubblicarlo: GitHub Pages oppure Vercel, cartella principale, nessuna config
 index.html     struttura della pagina
 style.css      grafica
 script.js      animazioni e calcolatori (prezzi in CONFIG)
-assets/        foto prima/dopo e spruzzino senza sfondo
+assets/        logo, favicon, foto prima/dopo e spruzzino senza sfondo
 ```
